@@ -21,7 +21,7 @@ except ImportError, e:
 class Redis_Checks:
     def __init__(self):
         self.method_mapping = {
-            "connect": "check_connnect",
+            "connect": "check_connect",
             "connected_clients": "check_connected_clients",
             "used_memory": "check_used_memory",
             "used_memory_human": "check_used_memory_human",
@@ -29,7 +29,7 @@ class Redis_Checks:
             "latency": "check_latency"
             }
 
-    def check_connnect(self, con, host, port, db, warning, critical):
+    def check_connect(self, con, host, port, db, warning, critical):
         with gevent.Timeout(30, False):
             if con.ping():
                 message = "ping redis host %s: port %s: db %s success!" % (
@@ -44,7 +44,6 @@ class Redis_Checks:
         return message, CRITICAL
 
     def check_connected_clients(self, con, host, port, db, warning, critical):
-        self.check_connnect(con, host, port, db)
         result = con.info()
         connected_count = result["connected_clients"]
         message = "current connections is %s !" % connected_count
@@ -56,7 +55,6 @@ class Redis_Checks:
             return message, OK
 
     def check_used_memory(self, con, host, port, db, warning, critical):
-        self.check_connnect(con, host, port, db)
         result = con.info()
         connected_count = result["used_memory"]
         message = "current used memory is %s !" % connected_count
@@ -68,7 +66,6 @@ class Redis_Checks:
             return message, OK
 
     def check_used_memory_human(self, con, host, port, db, warning, critical):
-        self.check_connnect(con, host, port, db)
         result = con.info()
         connected_count = result["used_memory_human"]
         message = "current used memory is %s !" % connected_count
@@ -80,7 +77,6 @@ class Redis_Checks:
             return message, OK
 
     def check_used_memory_rss(self, con, host, port, db, warning, critical):
-        self.check_connnect(con, host, port, db)
         result = con.info()
         connected_count = result["used_memory_rss"]
         message = "current used memory is %s !" % connected_count
@@ -102,6 +98,8 @@ class Redis_Checks:
             return message, CRITICAL
         elif total_time > warning:
             return message, WARNING
+        else:
+            return message, OK
 
     def method(self, name):
         try:
@@ -117,10 +115,10 @@ class Redis_Checks:
 def main():
     parser = argparse.ArgumentParser(
         description='This Nagios plugin checks the health of redis')
-    parser.add_argument('-h', action="store", dest="h")
+    parser.add_argument('-H', action="store", dest="h")
     parser.add_argument('-p', action="store", dest="p", type=int)
-    parser.add_argument('-w', action="store", dest="w", type=int)
-    parser.add_argument('-c', action="store", dest="c", type=int)
+    parser.add_argument('-w', action="store", dest="w", type=float)
+    parser.add_argument('-c', action="store", dest="c", type=float)
     parser.add_argument('-db', action="store", dest="db", type=int)
     parser.add_argument('-a', action="store", dest="a")
     args = parser.parse_args()
@@ -138,7 +136,7 @@ def main():
         db=redis_db,
         socket_timeout=3)
     redistool = Redis_Checks()
-    if redistool.check_connnect(redis_conn, redis_host, redis_port, redis_db)\
+    if redistool.check_connect(redis_conn, redis_host, redis_port, redis_db, warning, critical)\
             == CRITICAL:
         print "Can not connect to redis host %s: port %s: db %s!" % (
             redis_host, str(redis_port), str(redis_db))
