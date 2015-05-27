@@ -26,8 +26,9 @@ class Redis_Checks:
             "used_memory": "check_used_memory",
             "used_memory_human": "check_used_memory_human",
             "used_memory_rss": "check_used_memory_rss",
-            "latency": "check_latency"
-            }
+            "latency": "check_latency",
+            "keys": "check_keys"
+        }
 
     def check_connect(self, con, host, port, db, warning, critical):
         with gevent.Timeout(30, False):
@@ -97,6 +98,21 @@ class Redis_Checks:
         if total_time > critical:
             return message, CRITICAL
         elif total_time > warning:
+            return message, WARNING
+        else:
+            return message, OK
+
+    def check_keys(self, con, host, port, db, warning, critical):
+        result = con.info()
+        db_key = 'db' + str(db)
+        if db_key not in result:
+            return 'database %s not found' % str(db), CRITICAL
+        keys_count = result[db_key]['keys']
+        message = "current key-count is %s !" % keys_count
+        message += "| keys=%s" % keys_count
+        if keys_count > critical:
+            return message, CRITICAL
+        elif keys_count > warning:
             return message, WARNING
         else:
             return message, OK
