@@ -48,6 +48,7 @@ class Redis_Checks:
         result = con.info()
         connected_count = result["connected_clients"]
         message = "current connections is %s !" % connected_count
+        message += "| connected_clients=%s" % connected_count
         if connected_count > critical:
             return message, CRITICAL
         elif connected_count > warning:
@@ -59,6 +60,7 @@ class Redis_Checks:
         result = con.info()
         connected_count = result["used_memory"]
         message = "current used memory is %s !" % connected_count
+        message += "| used_memory=%s" % connected_count
         if connected_count > critical:
             return message, CRITICAL
         elif connected_count > warning:
@@ -81,6 +83,7 @@ class Redis_Checks:
         result = con.info()
         connected_count = result["used_memory_rss"]
         message = "current used memory is %s !" % connected_count
+        message += "| used_memory_rss=%s" % connected_count
         if connected_count > critical:
             return message, CRITICAL
         elif connected_count > warning:
